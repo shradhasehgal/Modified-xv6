@@ -6,29 +6,6 @@
 #define ll volatile long long int
 #define MAX 10000000
 
-// int main (int argc,char *argv[])
-// {
-//   int pid, status = 0, a = 0 ,b = 0, oof=0;
-//   pid = fork();
-//   if (pid == 0)
-//   {	
-//       ll x = 0, y;
-//       for (y = 0; y < MAX; y++)
-//         x = 1 ^ x; 
-//       exit();
-//       // exec(argv[1], argv);
-//       // printf(1, "exec %s failed\n", argv[1]);
-//       // exit();
-//   }
-
-//   else
-//   {
-//     status = waitx(&a,&b);
-//   }  
-//   printf(1, "Wait Time = %d\nRun Time = %d with Status %d \n",a,b,status); 
-//   exit();
-// }
-
 
 int main(int argc, char** argv) 
 {
@@ -50,6 +27,7 @@ int main(int argc, char** argv)
         x = 1 ^ x; 
       exit();
     }
+    
     else 
     {
       printf(1, "Timing %s\n", argv[1]);
