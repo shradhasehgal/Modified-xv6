@@ -112,7 +112,10 @@ found:
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
 
-  p->ctime = ticks; // Initializes variables 
+  // Initializes variables
+  acquire(&tickslock);
+  p->ctime = ticks; // lock so that value of ticks doesnt change
+  release(&tickslock); 
   p->etime = 0;
   p->rtime = 0;
   p->iotime = 0;
@@ -268,6 +271,11 @@ exit(void)
 
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
+  
+  acquire(&tickslock);
+  curproc->etime = ticks; // protect with a lock so val of ticks doesn't change
+  release(&tickslock);
+  
   sched();
   panic("zombie exit");
 }
