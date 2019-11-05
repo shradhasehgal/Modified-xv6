@@ -486,22 +486,24 @@ void scheduler(void)
 		
 	}
 
-		if (min_pr_proc != 0 && min_pr_proc->state == RUNNABLE)
-		{
-			cprintf("Process with PID %d and priority %d running on core %d\n", min_pr_proc->pid, min_pr_proc->priority, c->apicid);
-			p = min_pr_proc;
+	if (min_pr_proc != 0 && min_pr_proc->state == RUNNABLE)
+	{
+		cprintf("Process with PID %d and priority %d running on core %d\n", min_pr_proc->pid, min_pr_proc->priority, c->apicid);
+		//cprintf("\nyeet\n");
+		p = min_pr_proc;
 
-			c->proc = p;
-			switchuvm(p);
-			p->state = RUNNING;
+		c->proc = p;
+		switchuvm(p);
+		p->state = RUNNING;
 
-			swtch(&(c->scheduler), p->context);
-			switchkvm();
+		swtch(&(c->scheduler), p->context);
+		switchkvm();
 
-			// Process is done running for now.
-			// It should have changed its p->state before coming back.
-			c->proc = 0;
-		}
+		// Process is done running for now.
+		// It should have changed its p->state before coming back.
+		// cprintf("PID %d done !!!\n\n", min_pr_proc->pid);
+		c->proc = 0;
+	}
 #endif
 #endif
 #endif
@@ -688,26 +690,26 @@ void procdump(void)
 
 int set_priority(int pid, int priority)
 {
-	cprintf("\n%d\n", priority);
-	//struct proc *p;
+	//cprintf("\n%d\n", priority);
+	struct proc *p;
 	int to_yield = 0, old_priority = 0;
 
-	// for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
-	// {
-	// 	if(p->pid == pid)
-	// 	{
-	// 		//cprintf("\n\n%d\n\n", priority);
-	// 		to_yield = 0;
-	// 		acquire(&ptable.lock);
-	// 		old_priority = p->priority;
-  	// 		p->priority = priority;
-	// 		cprintf("Changed priority of process %d from %d to %d\n", p->pid, old_priority, p->priority);
-	// 		if (old_priority > p->priority)
-	// 			to_yield = 1;
-	// 		release(&ptable.lock);
-	// 		break;
-	// 	}
-	// }
+	for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+	{
+		if(p->pid == pid)
+		{
+			//cprintf("\n\n%d\n\n", priority);
+			to_yield = 0;
+			acquire(&ptable.lock);
+			old_priority = p->priority;
+  			p->priority = priority;
+			cprintf("Changed priority of process %d from %d to %d\n", p->pid, old_priority, p->priority);
+			if (old_priority > p->priority)
+				to_yield = 1;
+			release(&ptable.lock);
+			break;
+		}
+	}
   
   	if (to_yield == 1)
     	yield();
