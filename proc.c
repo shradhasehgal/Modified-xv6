@@ -404,14 +404,18 @@ void scheduler(void)
 		acquire(&ptable.lock);
 #ifdef RR
 		struct proc *p;
+		// cprintf("jhfk\n");
 		for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
 		{
+			
 			if (p->state != RUNNABLE)
 				continue;
 
 			// Switch to chosen process.  It is the process's job
 			// to release ptable.lock and then reacquire it
 			// before jumping back to us.
+			//cprintf("\nProcess with PID %d running on core %d\n", p->pid, c->apicid);
+
 			c->proc = p;
 			switchuvm(p);
 			p->state = RUNNING;
@@ -429,6 +433,7 @@ void scheduler(void)
 		// cprintf("FCFS\n");
 		struct proc *p;
 		struct proc *min_proc = 0;
+		//cprintf("wheee\n");
 		for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
 		{
 
@@ -446,7 +451,7 @@ void scheduler(void)
 
 		if (min_proc != 0 && min_proc->state == RUNNABLE)
 		{
-			cprintf("Process %s with start time %d chosen\n", min_proc->name, min_proc->ctime);
+			cprintf("Process with PID %d and start time %d running on core %d\n", min_proc->pid, min_proc->ctime, c->apicid);
 			p = min_proc;
 
 			c->proc = p;

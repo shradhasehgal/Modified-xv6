@@ -122,9 +122,10 @@ trap(struct trapframe *tf)
   if(myproc() && myproc()->state == RUNNING &&
      tf->trapno == T_IRQ0+IRQ_TIMER)
       #ifdef FCFS
-#else 
-      yield();
-#endif
+      #else 
+      //cprintf("jdd");
+        yield();
+      #endif
 
   // Check if the process has been killed since we yielded
   if(myproc() && myproc()->killed && (tf->cs&3) == DPL_USER)
