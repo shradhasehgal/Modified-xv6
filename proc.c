@@ -402,34 +402,34 @@ void scheduler(void)
 
 		// Loop over process table looking for process to run.
 		acquire(&ptable.lock);
-#ifdef RR
-		struct proc *p;
-		// cprintf("jhfk\n");
-		for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
-		{
-			
-			if (p->state != RUNNABLE)
-				continue;
+		#ifdef RR
+			struct proc *p;
+			// cprintf("jhfk\n");
+			for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+			{
+				
+				if (p->state != RUNNABLE)
+					continue;
 
-			// Switch to chosen process.  It is the process's job
-			// to release ptable.lock and then reacquire it
-			// before jumping back to us.
-			//cprintf("\nProcess with PID %d running on core %d\n", p->pid, c->apicid);
+				// Switch to chosen process.  It is the process's job
+				// to release ptable.lock and then reacquire it
+				// before jumping back to us.
+				//cprintf("\nProcess with PID %d running on core %d\n", p->pid, c->apicid);
 
-			c->proc = p;
-			switchuvm(p);
-			p->state = RUNNING;
+				c->proc = p;
+				switchuvm(p);
+				p->state = RUNNING;
 
-			swtch(&(c->scheduler), p->context);
-			switchkvm();
+				swtch(&(c->scheduler), p->context);
+				switchkvm();
 
-			// Process is done running for now.
-			// It should have changed its p->state before coming back.
-			c->proc = 0;
-		}
+				// Process is done running for now.
+				// It should have changed its p->state before coming back.
+				c->proc = 0;
+			}
 
-#else
-#ifdef FCFS
+		#else
+		#ifdef FCFS
 		// cprintf("FCFS\n");
 		struct proc *p;
 		struct proc *min_proc = 0;
@@ -465,48 +465,96 @@ void scheduler(void)
 			// It should have changed its p->state before coming back.
 			c->proc = 0;
 		}
-#else
-#ifdef PBS
+		#else
+		#ifdef PBS
 
-	struct proc *p;
-	struct proc *min_pr_proc = 0;
-		//cprintf("wheee\n");
-	for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
-	{
+			struct proc *p;
+			struct proc *min_pr_proc = 0;
 
-		if (p->state != RUNNABLE)
-			continue;
+			// for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+			// {
 
-		//if(p->pid > 1)
-		
-		if (min_pr_proc == 0)
-			min_pr_proc = p;
-		else if (p-> priority < min_pr_proc-> priority)
-			min_pr_proc = p;
-		
-	}
+			// 	struct proc *p1 = 0;
+			// 	min_pr_priority = 0; 
+			// 	if(p->state != RUNNABLE) continue;
 
-	if (min_pr_proc != 0 && min_pr_proc->state == RUNNABLE)
-	{
-		cprintf("Process with PID %d and priority %d running on core %d\n", min_pr_proc->pid, min_pr_proc->priority, c->apicid);
-		//cprintf("\nyeet\n");
-		p = min_pr_proc;
+			// 	min_pr_priority = p;
 
-		c->proc = p;
-		switchuvm(p);
-		p->state = RUNNING;
+			// 	for(p1 = ptable.proc; p1 < &ptable.proc[NPROC]; p1++)
+			// 	{
+			// 		if((p1->state == RUNNABLE) && (min_pr_priority ->priority > p1->priority))
+			// 			min_pr_priority = p1;
+			// 	}
 
-		swtch(&(c->scheduler), p->context);
-		switchkvm();
+			// 	p = min_pr_priority;
+				
+			// 	if (p->state == RUNNABLE)
+			// 	{
+			// 		cprintf("Process with PID %d and priority %d running\n", p->pid, p->priority);
 
-		// Process is done running for now.
-		// It should have changed its p->state before coming back.
-		// cprintf("PID %d done !!!\n\n", min_pr_proc->pid);
-		c->proc = 0;
-	}
-#endif
-#endif
-#endif
+			// 		c->proc = p;
+			// 		switchuvm(p);
+			// 		p->state = RUNNING;
+
+			// 		swtch(&(c->scheduler), p->context);
+			// 		switchkvm();
+			// 		//if (p->state == RUNNABLE) break;
+			// 		c->proc = 0;
+			// 	}
+			// }
+			
+
+				//cprintf("wheee\n");
+			for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+			{
+
+				if (p->state != RUNNABLE)
+					continue;
+
+				//if(p->pid > 1)
+				
+				if (min_pr_proc == 0)
+					min_pr_proc = p;
+
+				else if (p-> priority < min_pr_proc-> priority)
+					min_pr_proc = p;
+				
+			}
+
+			if(min_pr_proc == 0)
+			{
+				release(&ptable.lock);
+				continue;		
+			}
+
+			for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+			{
+				if (p->state != RUNNABLE)
+					continue;
+
+				if (p->priority == min_pr_proc->priority)
+				{
+					cprintf("Process with PID %d and priority %d running\n", p->pid, p->priority);
+
+					c->proc = p;
+					switchuvm(p);
+					p->state = RUNNING;
+
+					swtch(&(c->scheduler), p->context);
+					switchkvm();
+					//if (p->state == RUNNABLE) break;
+
+					// Process is done running for now.
+					// It should have changed its p->state before coming back.
+					// cprintf("PID %d done !!!\n\n", min_pr_proc->pid);
+					c->proc = 0;
+				}
+			}
+
+		#endif
+		#endif
+		#endif
+		// cprintf("yuegd");
 		release(&ptable.lock);
 	}
 }

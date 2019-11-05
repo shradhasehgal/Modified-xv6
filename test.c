@@ -10,14 +10,14 @@
 int main(void) 
 {
     
-    #ifdef PBS
-        int pid = getpid();
-        set_priority(pid, 60);
-    #endif
+    // #ifdef PBS
+    //     int pid = getpid();
+    //     set_priority(pid, 60);
+    // #endif
     // if (fork() == 0)
     // {
 
-        for (int i = 0; i < 5; i++) 
+        for (int i = 0; i < 10; i++) 
         {
             int pid = fork();
             if (pid == 0) 
@@ -38,7 +38,7 @@ int main(void)
 
     //}
 
-    for (int i = 0; i < 5; i++) 
+    for (int i = 0; i < 10; i++) 
     {
         wait();
        // printf(1, "\n\n%d finished!!!\n\n", i+3);
