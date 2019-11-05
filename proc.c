@@ -122,7 +122,7 @@ found:
 	p->etime = 0;
 	p->rtime = 0;
 	p->iotime = 0;
-
+	p->priority = 60; // default
 	return p;
 }
 
@@ -465,7 +465,44 @@ void scheduler(void)
 			// It should have changed its p->state before coming back.
 			c->proc = 0;
 		}
+#else
+#ifdef PBS
 
+	struct proc *p;
+	struct proc *min_pr_proc = 0;
+		//cprintf("wheee\n");
+	for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+	{
+
+		if (p->state != RUNNABLE)
+			continue;
+
+		//if(p->pid > 1)
+		
+		if (min_pr_proc == 0)
+			min_pr_proc = p;
+		else if (p-> priority < min_pr_proc-> priority)
+			min_pr_proc = p;
+		
+	}
+
+		if (min_pr_proc != 0 && min_pr_proc->state == RUNNABLE)
+		{
+			cprintf("Process with PID %d and priority %d running on core %d\n", min_pr_proc->pid, min_pr_proc->priority, c->apicid);
+			p = min_pr_proc;
+
+			c->proc = p;
+			switchuvm(p);
+			p->state = RUNNING;
+
+			swtch(&(c->scheduler), p->context);
+			switchkvm();
+
+			// Process is done running for now.
+			// It should have changed its p->state before coming back.
+			c->proc = 0;
+		}
+#endif
 #endif
 #endif
 		release(&ptable.lock);
@@ -648,3 +685,33 @@ void procdump(void)
 		cprintf("\n");
 	}
 }
+
+int set_priority(int pid, int priority)
+{
+	cprintf("\n%d\n", priority);
+	//struct proc *p;
+	int to_yield = 0, old_priority = 0;
+
+	// for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+	// {
+	// 	if(p->pid == pid)
+	// 	{
+	// 		//cprintf("\n\n%d\n\n", priority);
+	// 		to_yield = 0;
+	// 		acquire(&ptable.lock);
+	// 		old_priority = p->priority;
+  	// 		p->priority = priority;
+	// 		cprintf("Changed priority of process %d from %d to %d\n", p->pid, old_priority, p->priority);
+	// 		if (old_priority > p->priority)
+	// 			to_yield = 1;
+	// 		release(&ptable.lock);
+	// 		break;
+	// 	}
+	// }
+  
+  	if (to_yield == 1)
+    	yield();
+ 
+  	return old_priority;
+}
+
