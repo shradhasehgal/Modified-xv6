@@ -122,6 +122,7 @@ found:
 	p->etime = 0;
 	p->rtime = 0;
 	p->iotime = 0;
+	p->num_run = 0;
 	p->priority = 60; // default
 	return p;
 }
@@ -418,12 +419,13 @@ void scheduler(void)
 
 				c->proc = p;
 				switchuvm(p);
+				p->num_run++;
 				p->state = RUNNING;
 
 				swtch(&(c->scheduler), p->context);
 				switchkvm();
 
-				// Process is done running for now.
+				// Process is  running for now.
 				// It should have changed its p->state before coming back.
 				c->proc = 0;
 			}
@@ -456,6 +458,7 @@ void scheduler(void)
 
 			c->proc = p;
 			switchuvm(p);
+			p->num_run++;
 			p->state = RUNNING;
 
 			swtch(&(c->scheduler), p->context);
@@ -504,6 +507,7 @@ void scheduler(void)
 
 					c->proc = p;
 					switchuvm(p);
+					p->num_run++;
 					p->state = RUNNING;
 
 					swtch(&(c->scheduler), p->context);
@@ -729,5 +733,25 @@ int set_priority(int pid, int priority)
     	yield();
  
   	return old_priority;
+}
+
+int getpinfo(struct proc_stat *p_proc, int pid) 
+{
+	struct proc *p;
+	int ret = -1;
+	for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+	{
+		if(p -> pid == pid)
+		{
+			p_proc -> pid = pid;
+			p_proc->runtime = p->rtime;  
+			p_proc->num_run = p->num_run;
+			ret = 1;
+			//cprintf("")
+			break;   
+		}
+	}
+
+	return ret;
 }
 

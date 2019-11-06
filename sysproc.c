@@ -117,17 +117,16 @@ int sys_set_priority(void)
 
 }
 
-// int sys_getpinfo(void)
-// {
-//   struct proc_stat *p;
-//   int pid;
+int sys_getpinfo(void)
+{
+  int pid; struct proc_stat *p;
 
-//   if(argptr(0,(char**)&p,sizeof(struct proc_stat)) < 0)
-//     return -1;
+  if(argptr(0,(char**)&p,sizeof(struct proc_stat)) < 0)
+    return -1;
 
-//   if(argint(1, &pid) < 0)
-//     return -1;
+  else if(argint(1, &pid) < 0)
+    return -1;
 
-//   return getpinfo(p,pid);
-// }
+  else return getpinfo(p, pid);
+}
 
