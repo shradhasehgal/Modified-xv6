@@ -6,12 +6,16 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include "pstat.h"
 
 struct
 {
 	struct spinlock lock;
 	struct proc proc[NPROC];
 } ptable;
+
+struct proc *q[5][NPROC];
+int q_tail[5];
 
 static struct proc *initproc;
 
@@ -520,7 +524,9 @@ void scheduler(void)
 					c->proc = 0;
 				}
 			}
+		#ifdef MLFQ
 
+		#endif
 		#endif
 		#endif
 		#endif

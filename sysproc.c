@@ -121,12 +121,12 @@ int sys_getpinfo(void)
 {
   int pid; struct proc_stat *p;
 
-  if(argptr(0,(char**)&p,sizeof(struct proc_stat)) < 0)
+  if(argptr(0,(char**)&p,sizeof(p)) < 0)
     return -1;
 
-  else if(argint(1, &pid) < 0)
+  if(argint(1, &pid) < 0)
     return -1;
 
-  else return getpinfo(p, pid);
+  return getpinfo(p, pid);
 }
 

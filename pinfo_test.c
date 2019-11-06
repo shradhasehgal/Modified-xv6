@@ -6,7 +6,7 @@
 #include "user.h"
 //#include "fcntl.h"
 #include "fs.h"
-
+#include "pstat.h"
 
 int main(int argc, char *argv[])
 {
@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
     else
     {
         struct proc_stat p;
-        
+            
 
         if (getpinfo(&p, atoi(argv[1]))  == -1)
             printf(2, "Process with PID %d does not exist!\n", atoi(argv[1]));
