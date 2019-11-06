@@ -104,7 +104,7 @@ extern int sys_wait(void);
 extern int sys_write(void);
 extern int sys_uptime(void);
 extern int sys_waitx(void);
-extern int sys_getpinfo(void);
+//extern int sys_getpinfo(void);
 extern int sys_set_priority(void);
 
 static int (*syscalls[])(void) = {
@@ -130,7 +130,7 @@ static int (*syscalls[])(void) = {
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
 [SYS_waitx]   sys_waitx,
-// [SYS_getpinfo] sys_getpinfo,
+//[SYS_getpinfo] sys_getpinfo,
 [SYS_set_priority] sys_set_priority,
 
 };

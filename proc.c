@@ -451,7 +451,7 @@ void scheduler(void)
 
 		if (min_proc != 0 && min_proc->state == RUNNABLE)
 		{
-			cprintf("Process with PID %d and start time %d running on core %d\n", min_proc->pid, min_proc->ctime, c->apicid);
+			cprintf("Process with PID %d and start time %d running\n", min_proc->pid, min_proc->ctime);
 			p = min_proc;
 
 			c->proc = p;
@@ -470,41 +470,7 @@ void scheduler(void)
 
 			struct proc *p;
 			struct proc *min_pr_proc = 0;
-
-			// for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
-			// {
-
-			// 	struct proc *p1 = 0;
-			// 	min_pr_priority = 0; 
-			// 	if(p->state != RUNNABLE) continue;
-
-			// 	min_pr_priority = p;
-
-			// 	for(p1 = ptable.proc; p1 < &ptable.proc[NPROC]; p1++)
-			// 	{
-			// 		if((p1->state == RUNNABLE) && (min_pr_priority ->priority > p1->priority))
-			// 			min_pr_priority = p1;
-			// 	}
-
-			// 	p = min_pr_priority;
-				
-			// 	if (p->state == RUNNABLE)
-			// 	{
-			// 		cprintf("Process with PID %d and priority %d running\n", p->pid, p->priority);
-
-			// 		c->proc = p;
-			// 		switchuvm(p);
-			// 		p->state = RUNNING;
-
-			// 		swtch(&(c->scheduler), p->context);
-			// 		switchkvm();
-			// 		//if (p->state == RUNNABLE) break;
-			// 		c->proc = 0;
-			// 	}
-			// }
 			
-
-				//cprintf("wheee\n");
 			for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
 			{
 
