@@ -5,7 +5,7 @@
 #include "fcntl.h"
 
 #define ll volatile int
-#define MAX 1000000000
+#define MAX 10000000
 
 int main(void) 
 {
@@ -32,8 +32,8 @@ int main(void)
 
 //}
 
-    // for (int i = 0; i < 10; i++) 
-    //     wait();
+    for (int i = 0; i < 10; i++) 
+        wait();
 
     exit();
 }

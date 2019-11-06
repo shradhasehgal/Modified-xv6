@@ -14,8 +14,11 @@ struct
 	struct proc proc[NPROC];
 } ptable;
 
-struct proc *q[5][NPROC];
-int q_tail[5];
+struct proc *queue[5][NPROC];
+int q_tail[5] = {-1, -1, -1, -1, -1}, q_ticks[5] = {1, 2, 4, 8, 16};
+
+int add_proc_to_q(struct proc *p, int q_no);
+int remove_proc_from_q(struct proc *p, int q_no);
 
 static struct proc *initproc;
 
@@ -119,7 +122,7 @@ found:
 	memset(p->context, 0, sizeof *p->context);
 	p->context->eip = (uint)forkret;
 
-	// Initializes variables
+	// Initializes variables for waitx
 	acquire(&tickslock);
 	p->ctime = ticks; // lock so that value of ticks doesnt change
 	release(&tickslock);
@@ -128,6 +131,10 @@ found:
 	p->iotime = 0;
 	p->num_run = 0;
 	p->priority = 60; // default
+
+	for(int i=0; i<5; i++)
+		p->ticks[i] = 0;
+	// p->queue = 0; //assigning every proc to 0th queue initally
 	return p;
 }
 
@@ -164,8 +171,15 @@ void userinit(void)
 	acquire(&ptable.lock);
 
 	p->state = RUNNABLE;
+	#ifdef MLFQ
+		//cprintf("yeet 2\n");
+  		add_proc_to_q(p, 0);
+		//cprintf("yeet 3\n");
+
+	#endif
 
 	release(&ptable.lock);
+	cprintf("yeger");
 }
 
 // Grow current process's memory by n bytes.
@@ -233,6 +247,10 @@ int fork(void)
 	acquire(&ptable.lock);
 
 	np->state = RUNNABLE;
+
+	#ifdef MLFQ
+  		add_proc_to_q(np, 0);
+	#endif
 
 	release(&ptable.lock);
 
@@ -318,11 +336,13 @@ int wait(void)
 				kfree(p->kstack);
 				p->kstack = 0;
 				freevm(p->pgdir);
+				remove_proc_from_q(p, p->queue);
 				p->pid = 0;
 				p->parent = 0;
 				p->name[0] = 0;
 				p->killed = 0;
 				p->state = UNUSED;
+				p->queue = -1; // necessary??
 				release(&ptable.lock);
 				return pid;
 			}
@@ -365,11 +385,13 @@ int waitx(int *wtime, int *rtime)
 				kfree(p->kstack);
 				p->kstack = 0;
 				freevm(p->pgdir);
+				remove_from_queue(p->queue, p);
 				p->pid = 0;
 				p->parent = 0;
 				p->name[0] = 0;
 				p->killed = 0;
 				p->state = UNUSED;
+				p->queue = -1; //necessary??
 				release(&ptable.lock);
 				return pid;
 			}
@@ -402,11 +424,15 @@ void scheduler(void)
 
 	for (;;)
 	{
+		// cprintf("jyertd\n");
+
 		// Enable interrupts on this processor.
 		sti();
 
 		// Loop over process table looking for process to run.
 		acquire(&ptable.lock);
+		// cprintf("arre");
+
 		#ifdef RR
 			struct proc *p;
 			// cprintf("jhfk\n");
@@ -524,8 +550,45 @@ void scheduler(void)
 					c->proc = 0;
 				}
 			}
+		#else
 		#ifdef MLFQ
 
+			// struct proc *p;
+			// for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+			// {
+				
+			// 	if (p->state != RUNNABLE)
+			// 		continue;
+
+			// 	// Switch to chosen process.  It is the process's job
+			// 	// to release ptable.lock and then reacquire it
+			// 	// before jumping back to us.
+			// 	//cprintf("\nProcess with PID %d running on core %d\n", p->pid, c->apicid);
+
+			// 	c->proc = p;
+			// 	switchuvm(p);
+			// 	p->num_run++;
+			// 	p->state = RUNNING;
+
+			// 	swtch(&(c->scheduler), p->context);
+			// 	switchkvm();
+
+			// 	// Process is  running for now.
+			// 	// It should have changed its p->state before coming back.
+			// 	c->proc = 0;
+			// }
+
+			// start
+			int q_curr = -1;
+			for(int i=0; i < 5; i++)
+			{
+				if(q_tail[i] >=0)
+				{
+					p = queue[i][0];
+					remove_proc_from_q(p, i);
+				} 
+			}
+		
 		#endif
 		#endif
 		#endif
@@ -761,3 +824,48 @@ int getpinfo(struct proc_stat *p_proc, int pid)
 	return ret;
 }
 
+int add_proc_to_q(struct proc *p, int q_no)
+{	
+
+	//for(int i=0; i < q_tail[])
+	// if(p->pid == 0)
+	// 	cprintf("wut");
+
+	p -> queue = q_no;
+	q_tail[q_no] += 1;
+	queue[q_no][q_tail[q_no]] = p;
+	cprintf("Process %d added to Queue %d\n", p->pid, q_no);
+	//cprintf("yeet 1\n");
+
+	return 1;
+}
+
+int remove_proc_from_q(struct proc *p, int q_no)
+{
+	int proc_found = 0, rem = 0;
+	for(int i=0; i < q_tail[q_no]; i++)
+	{
+		// cprintf("\n%d yeet\n", queue[q_no][i] -> pid);
+		if(queue[q_no][i] -> pid == p->pid)
+		{
+			//cprintf("%s yeet\n", p->name);
+			rem = i;
+			proc_found = 1;
+			break;
+		}
+	}
+
+	if(proc_found  == 0)
+	{
+		cprintf("Process %d not found in Queue %d\n", p->pid, q_no);
+		return -1;
+	}
+
+	for(int i = rem; i < q_tail[q_no]; i++)
+		queue[q_no][i] = queue[q_no][i+1]; 
+
+	q_tail[q_no] -= 1;
+	cprintf("Process %d removed from Queue %d\n", p->pid, q_no);
+	return 1;
+
+}
