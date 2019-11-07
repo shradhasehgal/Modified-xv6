@@ -60,6 +60,7 @@ struct proc {
   int curr_ticks;
   int change_q;
   int enter;
+  int pbs_yield_flag;
 };
 
 // Process memory is laid out contiguously, low addresses first:

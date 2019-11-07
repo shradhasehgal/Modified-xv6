@@ -149,6 +149,7 @@ found:
 	p->rtime = 0;
 	p->iotime = 0;
 	p->num_run = 0;
+	p->pbs_yield_flag = 0;
 	p->priority = 60; // default
 	#ifdef MLFQ
 		p->curr_ticks = 0;
@@ -538,13 +539,12 @@ void scheduler(void)
 			
 			for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
 			{
-
 				if (p->state != RUNNABLE)
-					continue;
-				
+					continue;	
+
 				if (min_pr_proc == 0)
 					min_pr_proc = p;
-
+				
 				else if (p-> priority < min_pr_proc-> priority)
 					min_pr_proc = p;
 				
@@ -558,10 +558,26 @@ void scheduler(void)
 
 			for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
 			{
+				struct proc *q; int flag =0;
+				for(q = ptable.proc; q < &ptable.proc[NPROC]; q++)
+				{
+					// cprintf("yeet");
+					if (q->state != RUNNABLE)
+						continue;
+					
+					if(q->priority < min_pr_proc->priority)
+						flag = 1;
+				}
+				
+				if(flag == 1)
+					// cprintf("yeet");
+					break;
+				
+
 				if (p->state != RUNNABLE)
 					continue;
 
-				if (p->priority == min_pr_proc->priority)
+				else if (p->priority == min_pr_proc->priority)
 				{
 					cprintf("Process with PID %d and priority %d running\n", p->pid, p->priority);
 
@@ -867,6 +883,7 @@ int set_priority(int pid, int priority)
 			acquire(&ptable.lock);
 			old_priority = p->priority;
   			p->priority = priority;
+			// p->num_run_pbs = 0;
 			cprintf("Changed priority of process %d from %d to %d\n", p->pid, old_priority, p->priority);
 			if (old_priority > p->priority)
 				to_yield = 1;

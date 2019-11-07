@@ -198,5 +198,101 @@ for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
 }
 ```
 - To implement RR for same priority processes, iterate through all the processes again. Whichever has same priority as the min priority found, execute that. yield() is enabled for PBS in proc.c() so the process gets yielded out and if any other process with same priority is there, it gets executed next.
+- We also have a check within the 2nd loop to ensure no other process with lower priority has come in. If it has, we break out of the 2nd loop, otherwise RR is executed for same priority processes.
+- set_priority() calls yield() when the priority of a process becomes lower than its old priority.
+
+```c
+int set_priority(int pid, int priority)
+{
+	struct proc *p;
+	int to_yield = 0, old_priority = 0;
+
+	for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+	{
+		if(p->pid == pid)
+		{
+			to_yield = 0;
+			acquire(&ptable.lock);
+			old_priority = p->priority;
+  			p->priority = priority;
+			cprintf("Changed priority of process %d from %d to %d\n", p->pid, old_priority, p->priority);
+			if (old_priority > p->priority)
+				to_yield = 1;
+			release(&ptable.lock);
+			break;
+		}
+	}
+  
+  	if (to_yield == 1)
+    	yield();
+ 
+  	return old_priority;
+}
+```
 
 ## MLFQ
+
+- We declared 5 queues with different priorities based on time slices, i.e. 1, 2, 4, 8, 16 timer ticks, as shown:
+```c
+struct proc *queue[5][NPROC];
+```
+- These queues contain runnable processes only.
+- The add process to queue and remove process from queue functions take arguments of the process and queue number and make appropriate changes in the array(pop and push).
+```c
+int add_proc_to_q(struct proc *p, int q_no);
+int remove_proc_from_q(struct proc *p, int q_no);
+```
+- We add a process in a queue in userinit() and fork() and kill() functions in proc.c i.e. wherever the process state becomes runnable.
+- Ageing is implemented by iterating through queues 1-4 and checking if any process has exceeded the age limit and subsequently moving it up in the queues.
+```c
+for(int i=1; i < 5; i++)
+{
+    for(int j=0; j <= q_tail[i]; j++)
+    {
+        struct proc *p = queue[i][j];
+        int age = ticks - p->enter;
+        if(age > 30)
+        {
+            remove_proc_from_q(p, i);
+            cprintf("Process %d moved up to queue %d due to age time %d\n", p->pid, i-1, age);
+            add_proc_to_q(p, i-1);
+        }
+
+    }
+}
+```
+- Next, we iterate over all the queues in order, increase the tick associated with that process and its number of runs.
+- In the trap file, we check if the `curr_ticks` of the process >= permissible ticks of the queue. If that's the case, we call yield and push the process to the next queue. Otherwise increment the ticks and let the process remain in queue.
+
+The trap function is as follows:
+```c
+if (myproc() && myproc()->state == RUNNING && tf->trapno == T_IRQ0 + IRQ_TIMER)
+{
+    #ifdef MLFQ
+        if(myproc()->curr_ticks >= q_ticks_max[myproc()->queue])
+        {
+            change_q_flag(myproc());
+            cprintf("Process with PID %d on Queue %d yielded out as ticks completed = %d\n", myproc()->pid, myproc()->queue, myproc()->curr_ticks);
+            yield();
+        }
+
+        else 		
+        {
+            incr_curr_ticks(myproc());
+            cprintf("Process with PID %d continuing on Queue %d with current tick now being %d\n", myproc()->pid, myproc()->queue, myproc()->curr_ticks);
+        }	
+
+    #else
+    #ifndef FCFS
+        // cprintf("ysfn");
+        yield();
+
+    #endif
+    #endif
+}
+```
+- Release table lock once the process is over
+
+## Tester files
+
+`time.c`, `pinfo_test.c` and  `test.c` are the tester files. 
