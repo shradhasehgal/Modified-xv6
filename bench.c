@@ -26,13 +26,19 @@ int main(int argc, char *argv[])
 				set_priority(getpid(), 107 - 9 * i);
 			#endif
 			
-			sleep(200*i + 200); //io
-		
-			for(vll l=0; l < 10-i; l++)
+			for(int j=0; j < 10; j++)
 			{
-				for (vll k = 0; k < MAX; k++)
-					k = 1 ^ k; //cpu
+				if(j <= i)
+					sleep(200);
+
+				else
+				{
+					for (vll k = 0; k < MAX; k++)
+						k = 1 ^ k; //cpu
+				}
+				
 			}
+
 			exit();
 		}
 	}
