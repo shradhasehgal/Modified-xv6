@@ -333,7 +333,7 @@ void exit(void)
 	// acquire(&tickslock);
 	curproc->etime = ticks; // protect with a lock so val of ticks doesn't change
 	// release(&tickslock);
-
+	cprintf("Total Time: %d\n", curproc->etime - curproc->ctime);
 	sched();
 	panic("zombie exit");
 }
