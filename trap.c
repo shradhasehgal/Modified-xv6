@@ -56,10 +56,10 @@ void trap(struct trapframe *tf)
 			if (myproc())
 			{
 				if (myproc()->state == RUNNING)
-					myproc()->rtime += 1;
+					myproc()->rtime++;
 
 				else if (myproc()->state == SLEEPING)
-					myproc()->iotime += 1;
+					myproc()->iotime++;
 			}
 		}
 
@@ -123,21 +123,18 @@ void trap(struct trapframe *tf)
 
 	if (myproc() && myproc()->state == RUNNING && tf->trapno == T_IRQ0 + IRQ_TIMER)
 	{
-		//cprintf("jdd");
 		#ifdef MLFQ
-			// cprintf("fn");
 			if(myproc()->curr_ticks >= q_ticks_max[myproc()->queue])
 			{
-				// cprintf("\nheheh\n");
-				// change_q_flag(myproc());
+				change_q_flag(myproc());
+				cprintf("Process with PID %d on Queue %d yielded out as ticks completed = %d\n", myproc()->pid, myproc()->queue, myproc()->curr_ticks);
 				yield();
 			}
 
 			else 		
 			{
-				// incr_curr_ticks(myproc());
-				myproc()->curr_ticks++;
-				// cprintf("Process with PID %d still running on Queue %d with current ticks %d\n", myproc()->pid, myproc()->queue, myproc()->curr_ticks);
+				incr_curr_ticks(myproc());
+				cprintf("Process with PID %d continuing on Queue %d with current tick now being %d\n", myproc()->pid, myproc()->queue, myproc()->curr_ticks);
 			}	
 
 		#else
