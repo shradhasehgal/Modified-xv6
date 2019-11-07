@@ -56,10 +56,10 @@ void trap(struct trapframe *tf)
 			if (myproc())
 			{
 				if (myproc()->state == RUNNING)
-					myproc()->rtime++;
+					myproc()->rtime += 1;
 
 				else if (myproc()->state == SLEEPING)
-					myproc()->iotime++;
+					myproc()->iotime+=1;
 			}
 		}
 
@@ -127,14 +127,18 @@ void trap(struct trapframe *tf)
 			if(myproc()->curr_ticks >= q_ticks_max[myproc()->queue])
 			{
 				change_q_flag(myproc());
-				cprintf("Process with PID %d on Queue %d yielded out as ticks completed = %d\n", myproc()->pid, myproc()->queue, myproc()->curr_ticks);
+				#ifdef T
+					cprintf("Process with PID %d on Queue %d yielded out as ticks completed = %d\n", myproc()->pid, myproc()->queue, myproc()->curr_ticks);
+				#endif
 				yield();
 			}
 
 			else 		
 			{
 				incr_curr_ticks(myproc());
-				cprintf("Process with PID %d continuing on Queue %d with current tick now being %d\n", myproc()->pid, myproc()->queue, myproc()->curr_ticks);
+				#ifdef T
+					cprintf("Process with PID %d continuing on Queue %d with current tick now being %d\n", myproc()->pid, myproc()->queue, myproc()->curr_ticks);
+				#endif
 			}	
 
 		#else

@@ -516,7 +516,9 @@ void scheduler(void)
 
 		if (min_proc != 0 && min_proc->state == RUNNABLE)
 		{
-			cprintf("Process with PID %d and start time %d running\n", min_proc->pid, min_proc->ctime);
+			#ifdef T
+				cprintf("Process %s with PID %d and start time %d running\n",min_proc->name, min_proc->pid, min_proc->ctime);
+			#endif
 			p = min_proc;
 
 			c->proc = p;
@@ -568,7 +570,7 @@ void scheduler(void)
 					if(q->priority < min_pr_proc->priority)
 						flag = 1;
 				}
-				
+
 				if(flag == 1)
 					// cprintf("yeet");
 					break;
@@ -579,8 +581,9 @@ void scheduler(void)
 
 				else if (p->priority == min_pr_proc->priority)
 				{
-					cprintf("Process with PID %d and priority %d running\n", p->pid, p->priority);
-
+					#ifdef T
+						cprintf("Process %s with PID %d and priority %d running\n",p->name, p->pid, p->priority);
+					#endif
 					c->proc = p;
 					switchuvm(p);
 					p->num_run++;
@@ -609,7 +612,9 @@ void scheduler(void)
 					if(age > 30)
 					{
 						remove_proc_from_q(p, i);
-						cprintf("Process %d moved up to queue %d due to age time %d\n", p->pid, i-1, age);
+						#ifdef T
+							cprintf("Process %d moved up to queue %d due to age time %d\n", p->pid, i-1, age);
+						#endif
 						add_proc_to_q(p, i-1);
 					}
 
@@ -633,7 +638,9 @@ void scheduler(void)
 			{
 				p->curr_ticks++;
 				p->num_run++;
-				cprintf("Scheduling %s with PID %d from Queue %d with current tick %d\n",p->name, p->pid, p->queue, p->curr_ticks);
+				#ifdef T
+					cprintf("Scheduling %s with PID %d from Queue %d with current tick %d\n",p->name, p->pid, p->queue, p->curr_ticks);
+				#endif
 				p->ticks[p->queue]++;
 				c->proc = p;
 				switchuvm(p);
@@ -884,7 +891,9 @@ int set_priority(int pid, int priority)
 			old_priority = p->priority;
   			p->priority = priority;
 			// p->num_run_pbs = 0;
-			cprintf("Changed priority of process %d from %d to %d\n", p->pid, old_priority, p->priority);
+			#ifdef T
+				cprintf("Changed priority of process %d from %d to %d\n", p->pid, old_priority, p->priority);
+			#endif
 			if (old_priority > p->priority)
 				to_yield = 1;
 			release(&ptable.lock);
@@ -913,6 +922,10 @@ int getpinfo(struct proc_stat *p_proc, int pid)
 			p_proc -> current_queue = p->queue;
 			for(int i=0; i < 5;i++)
 				p_proc->ticks[i] = p->ticks[i];
+			#else
+			p_proc -> current_queue = -1;
+			for(int i=0; i < 5;i++)
+				p_proc->ticks[i] = -1;
 			#endif
 			ret = 1;
 			//cprintf("")
