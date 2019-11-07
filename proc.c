@@ -153,7 +153,7 @@ found:
 	#ifdef MLFQ
 		p->curr_ticks = 0;
 		p->queue = 0;
-		p->age = 0;
+		p->enter = 0;
 		for(int i=0; i<5; i++)
 			p->ticks[i] = 0;
 	#endif
@@ -583,6 +583,22 @@ void scheduler(void)
 		#else
 		#ifdef MLFQ
 
+
+			for(int i=1; i < 5; i++)
+			{
+				for(int j=0; j <= q_tail[i]; j++)
+				{
+					struct proc *p = queue[i][j];
+					int age = ticks - p->enter;
+					if(age > 30)
+					{
+						remove_proc_from_q(p, i);
+						cprintf("Process %d moved up to queue %d due to age time %d\n", p->pid, i-1, age);
+						add_proc_to_q(p, i-1);
+					}
+
+				}
+			}
 			struct proc *p =0;
 
 			// int oof = 0;
@@ -626,7 +642,7 @@ void scheduler(void)
 
 					else p->curr_ticks = 0;
 					
-					p->age = ticks;
+					// p->age = ticks;
 					// cprintf("Adding Process %d to Queue %d\n",p->pid ,p->queue);
 					add_proc_to_q(p, p->queue);
 
@@ -899,6 +915,7 @@ int add_proc_to_q(struct proc *p, int q_no)
 			return -1;
 	}
 	// cprintf("Process %d added to Queue %d\n", p->pid, q_no);
+	p->enter = ticks;
 	p -> queue = q_no;
 	q_tail[q_no]++;
 	queue[q_no][q_tail[q_no]] = p;

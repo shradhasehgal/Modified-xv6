@@ -1,6 +1,6 @@
 # Modifications to the xv6 operating system
 
-## By Shradha Sehgal
+## By Shradha Sehgal (2018101071)
 
 ## Overview
 
@@ -11,7 +11,7 @@ Various improvements have been made to the xv6 operating system such as the wait
 1. Run the command `make qemu`.
 2. Add the flag `SCHEDULER` to choose between RR, FCFS, PBS, and MLFQ 
 
-# Task 1 
+## Task 1 
 
 ## Waitx Syscall
 
@@ -119,7 +119,7 @@ int sys_getpinfo(void)
 }
 ```
 
-# Task 2 - Scheduling techniques
+## Task 2 - Scheduling techniques
 
 All scheduling techiniques have been added to the `scheduler` function in `proc.c`. Add the flag `SCHEDULER` to choose between RR, FCFS, PBS, and MLFQ. This has been implemented in `Makefile`. 
 
@@ -133,4 +133,70 @@ All scheduling techiniques have been added to the `scheduler` function in `proc.
 #endif
 ```
 
-- Set
+- Iterate through the process table to find the process with min creation time as follows:
+
+```c
+for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+{
+
+    if (p->state != RUNNABLE)
+        continue;
+
+    //if(p->pid > 1)
+    {
+        if (min_proc == 0)
+            min_proc = p;
+        else if (p->ctime < min_proc->ctime)
+            min_proc = p;
+    }
+}
+```
+
+- Check if the process found is runnable, if it is, execute it
+```c
+
+if (min_proc != 0 && min_proc->state == RUNNABLE)
+{
+    cprintf("Process with PID %d and start time %d running\n", min_proc->pid, min_proc->ctime);
+    p = min_proc;
+
+    c->proc = p;
+    switchuvm(p);
+    p->num_run++;
+    p->state = RUNNING;
+
+    swtch(&(c->scheduler), p->context);
+    switchkvm();
+
+    // Process is done running for now.
+    // It should have changed its p->state before coming back.
+    c->proc = 0;
+}
+
+```
+
+## Priority Based Scheduler
+
+- Assign default priority 60 to each entering process
+- Find the minimum priority process by iterating through the process table (min priority number translates to maximum preference): 
+```c
+struct proc *p;
+struct proc *min_pr_proc = 0;
+
+for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+{
+
+    if (p->state != RUNNABLE)
+        continue;
+    
+    if (min_pr_proc == 0)
+        min_pr_proc = p;
+
+    else if (p-> priority < min_pr_proc-> priority)
+        min_pr_proc = p;
+    
+}
+```
+- To implement RR for same priority processes, iterate through all the processes again. Whichever has same priority as the min priority found, execute that. yield() is enabled for PBS in proc.c() so the process gets yielded out and if any other process with same priority is there, it gets executed next.
+
+## MLFQ

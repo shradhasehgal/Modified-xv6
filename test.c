@@ -29,8 +29,8 @@ int main(void)
     }
 
 
-    for (int i = 0; i < 5; i++) 
-        wait();
+    // for (int i = 0; i < 5; i++) 
+    //     wait();
 
     exit();
 }
